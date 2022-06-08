@@ -17,7 +17,7 @@ L'usine logicielle est accéssible à l'adresse suivante
 Cloner les projest de test depuis l'adresse suivante
 
 ```
-git clone https://github.com/kamel2k/devsecops-lab-dsid.git
+git clone https://github.com/kamel2k/usinelogicielle-lab-dsid.git
 ```
 
 ## Paramétrage Sonar
