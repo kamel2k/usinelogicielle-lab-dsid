@@ -295,3 +295,227 @@ Saisir les informations relatives au serveur Nexus IQ
 ### Configuration de Visual Code
 
 A vous de jouer
+
+## Jenkins
+
+### Clone du projet Backend de bitbucket
+
+```
+http://agile.douanes.sn:7990/scm/test/backend.git
+```
+
+**Créer une branche avec votre nom d'utilisateur**
+
+```
+git checkout -b developer1
+```
+
+### Jenkinsfile initial
+
+```
+pipeline {
+  agent any
+
+  tools {
+    maven 'maven3'
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+  }
+}
+```
+
+Lancer la commande
+```
+git add -A
+git commit -m "add pipeline"
+git push origin developer1
+```
+
+### Création d'un pipeline Jenkins
+
+![](img/pipeline1.png)
+![](img/pipeline2.png)
+![](img/pipeline3.png)
+
+
+Remplacer Branch Specifier par **developer1**
+
+### Executer le pipeline dans Jenkins
+
+### Phase build du projet
+
+Editer le Jenkinsfile du projet et mettre le contenu suivant
+
+```
+pipeline {
+  agent any
+
+  tools {
+    maven 'maven3'
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+    stage('build') {
+      steps {
+        withMaven(globalMavenSettingsConfig: '343ec145-a931-4854-af96-fd98c6c15b21', jdk: 'jdk11', maven: 'maven3', traceability: false) {
+          sh "mvn clean install"
+        }
+      }
+    }
+  }
+}
+```
+
+Relancer le build Jenkins
+
+###  Phase Qualité projet
+
+Editer le Jenkinsfile du projet et mettre le contenu suivant
+
+```
+pipeline {
+  agent any
+
+  tools {
+    maven 'maven3'
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+    stage('build') {
+      steps {
+        withMaven(globalMavenSettingsConfig: '343ec145-a931-4854-af96-fd98c6c15b21', jdk: 'jdk11', maven: 'maven3', traceability: false) {
+          sh "mvn clean install"
+        }
+      }
+    }
+
+    stage('Quality') {
+
+      environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+      }
+      steps {
+        withSonarQubeEnv('sonarqube') {
+          sh "${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectKey=backend:developer1"
+        }
+      }
+
+    }
+
+  }
+}
+```
+
+Remplacer developer1 par votre nom d'utilisateur
+Relancer le build Jenkins et voir le rapport Sonar
+
+### Phase Sécurité du projet
+
+Créer le projet backend-developer1 dans Nexus IQ et remplacer developer1 par votre nom utilisateur
+
+```
+pipeline {
+  agent any
+
+  tools {
+    maven 'maven3'
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+    stage('build') {
+      steps {
+        withMaven(globalMavenSettingsConfig: '343ec145-a931-4854-af96-fd98c6c15b21', jdk: 'jdk11', maven: 'maven3', traceability: false) {
+          sh "mvn clean install"
+        }
+      }
+    }
+
+    stage('Quality') {
+
+      environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+      }
+      steps {
+        withSonarQubeEnv('sonarqube') {
+          sh "${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectKey=backend:developer1"
+        }
+      }
+
+    }
+
+    stage('Vulnerability analyze') {
+      steps {
+
+        nexusPolicyEvaluation enableDebugLogging: false, failBuildOnNetworkError: false, iqApplication: selectedApplication('backend-developer1'), iqInstanceId: 'nexusiq', iqStage: 'build'
+      }
+    }
+
+  }
+}
+```
+
+Remplacer developer1 par votre nom d'utilisateur
+
+### Jenkinsfile final
+
+```
+pipeline {
+  agent any
+
+  tools {
+    maven 'maven3'
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+    stage('build') {
+      steps {
+        withMaven(globalMavenSettingsConfig: '343ec145-a931-4854-af96-fd98c6c15b21', jdk: 'jdk11', maven: 'maven3', traceability: false) {
+          sh "mvn clean install"
+        }
+      }
+    }
+
+    stage('Quality') {
+
+      environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+      }
+      steps {
+        withSonarQubeEnv('sonarqube') {
+          sh "${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectKey=backend:developer1"
+        }
+      }
+
+    }
+
+    stage('Vulnerability analyze') {
+      steps {
+
+        nexusPolicyEvaluation enableDebugLogging: false, failBuildOnNetworkError: false, iqApplication: selectedApplication('backend-developer1'), iqInstanceId: 'nexusiq', iqStage: 'build'
+      }
+    }
+
+  }
+}
+```
